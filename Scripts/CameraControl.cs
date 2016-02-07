@@ -10,17 +10,17 @@ public class CameraControl : MonoBehaviour {
     public float rotationStrength = 0.25f, scrollStrength = 25f;
     public bool blockControl = true, invertX = false, invertY = false, invertZoom = false;
     private bool mouseDown = false;
-    private Vector3 previousMouse = Vector3.zero;
+    private Vector3 initialMouse = Vector3.zero, previousMouse = Vector3.zero;
     private int firstTouch = -1, secondTouch = -1;
     private float fingerDistance = 0;
-    public float movementDeadZone = 1f, zoomDeadZone = 1f;
-    private bool moved = false, zoomed = false;
+    public float movementDeadZone = 25f, zoomDeadZone = 1f;
+    public bool moved = false, zoomed = false;
 
 	void Start ()
     {
 	}
 	
-	void LateUpdate ()
+	void FixedUpdate ()
     {
         float horizontal = 0, vertical = 0, scroll = 0;
 
@@ -76,11 +76,18 @@ public class CameraControl : MonoBehaviour {
             {
                 if (!mouseDown && Input.GetMouseButton(0))
                 {
+                    moved = false;
                     mouseDown = true;
+                    initialMouse = Input.mousePosition;
                     previousMouse = Input.mousePosition;
                 }
-                if (!Input.GetMouseButton(0)) mouseDown = false;
-                if (mouseDown)
+                if (!Input.GetMouseButton(0))
+                {
+                    moved = false;
+                    mouseDown = false;
+                }
+                if (mouseDown && (initialMouse - Input.mousePosition).magnitude > movementDeadZone) moved = true;
+                if (mouseDown && moved)
                 {
                     horizontal = Input.mousePosition.x - previousMouse.x;
                     vertical = previousMouse.y - Input.mousePosition.y;

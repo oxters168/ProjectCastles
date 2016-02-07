@@ -40,46 +40,53 @@ public class Game : MonoBehaviour {
     }
     public void HighlightProvinces()
     {
-        if (highlightedProvince != null) highlightedProvince.Highlight(false);
-        highlightedProvince = null;
-
-        Ray mouseRay = Camera.main.ScreenPointToRay(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0));
-        Debug.DrawRay(mouseRay.origin, mouseRay.direction);
-        RaycastHit hitInfo;
-        if (Physics.Raycast(mouseRay, out hitInfo))
+        if (!Camera.main.GetComponent<CameraControl>().moved)
         {
-            highlightedProvince = hitInfo.transform.GetComponent<ProvinceScript>();
-            if (highlightedProvince == selectedProvince) highlightedProvince = null;
-        }
+            if (highlightedProvince != null) highlightedProvince.Highlight(false);
+            highlightedProvince = null;
 
-        if (highlightedProvince != null) highlightedProvince.Highlight(true);
-        //return currentlyOver;
+            Ray mouseRay = Camera.main.ScreenPointToRay(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0));
+            Debug.DrawRay(mouseRay.origin, mouseRay.direction);
+            RaycastHit hitInfo;
+            if (Physics.Raycast(mouseRay, out hitInfo))
+            {
+                highlightedProvince = hitInfo.transform.GetComponent<ProvinceScript>();
+                if (highlightedProvince == selectedProvince) highlightedProvince = null;
+            }
+
+            if (highlightedProvince != null) highlightedProvince.Highlight(true);
+            //return currentlyOver;
+        }
     }
     public void SelectProvinces()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (!Camera.main.GetComponent<CameraControl>().moved)
         {
-            if(highlightedProvince != null) mouseDowned = highlightedProvince;
-        }
-        if (Input.GetMouseButtonUp(0))
-        {
-            if (highlightedProvince != null && mouseDowned != null && mouseDowned == highlightedProvince)
+            if (Input.GetMouseButtonDown(0))
             {
-                if (selectedProvince != null) selectedProvince.Select(false);
-                highlightedProvince = null;
-                selectedProvince = mouseDowned;
-                mouseDowned = null;
-                selectedProvince.Select(true);
+                if (highlightedProvince != null) mouseDowned = highlightedProvince;
+            }
+            if (Input.GetMouseButtonUp(0))
+            {
+                if (highlightedProvince != null && mouseDowned != null && mouseDowned == highlightedProvince)
+                {
+                    if (selectedProvince != null) selectedProvince.Select(false);
+                    highlightedProvince = null;
+                    selectedProvince = mouseDowned;
+                    mouseDowned = null;
+                    selectedProvince.Select(true);
+                }
+            }
+            if (Input.GetMouseButtonUp(1))
+            {
+                if (selectedProvince != null)
+                {
+                    selectedProvince.Select(false);
+                    selectedProvince = null;
+                }
             }
         }
-        if (Input.GetMouseButtonUp(1))
-        {
-            if (selectedProvince != null)
-            {
-                selectedProvince.Select(false);
-                selectedProvince = null;
-            }
-        }
+        else mouseDowned = null;
     }
 
     public void CreateNobles()

@@ -38,12 +38,12 @@ public class NobleScript : MonoBehaviour {
                 if (GUI.Button(new Rect(0, 0, 100, 100), "Scout"))
                 {
                     Province selectedProvince = Camera.main.GetComponent<Game>().selectedProvince.province;
-                    StartCoroutine(noble.StartScout(selectedProvince));
+                    StartCoroutine(noble.StartScout(selectedProvince, 0, 0, 4));
                 }
                 if (GUI.Button(new Rect(100, 0, 100, 100), "Attack"))
                 {
                     Province selectedProvince = Camera.main.GetComponent<Game>().selectedProvince.province;
-                    StartCoroutine(noble.StartAttack(selectedProvince));
+                    StartCoroutine(noble.StartAttack(selectedProvince, 0, 4, 0));
                 }
             }
         }
@@ -64,13 +64,13 @@ public class NobleScript : MonoBehaviour {
                     Province neighbourLand = Camera.main.GetComponent<Game>().provinces[landNeighbours[j]];
                     if (!knownLands.ContainsKey(neighbourLand.provinceName) && !noble.GetActiveScouts().Contains(neighbourLand.provinceName))
                     {
-                        StartCoroutine(noble.StartScout(neighbourLand));
+                        StartCoroutine(noble.StartScout(neighbourLand, 0, 4, 4));
                         relations = true;
                         break;
                     }
                     else if (neighbourLand.owner == null && !noble.GetActiveAttacks().Contains(neighbourLand.provinceName))
                     {
-                        StartCoroutine(noble.StartAttack(neighbourLand));
+                        StartCoroutine(noble.StartAttack(neighbourLand, 0, 4, 4));
                         army = true;
                         break;
                     }

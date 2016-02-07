@@ -12,9 +12,12 @@ public class Noble {
 
     public string name { get; private set; }
 
-    public int stock { get; private set; }
-    public int army { get; private set; }
-    public int relations { get; private set; }
+    public int administrativePoints { get; private set; }
+    public int administrativePointsLeft { get; private set; }
+    public int militaryPoints { get; private set; }
+    public int militaryPointsLeft { get; private set; }
+    public int politicalPoints { get; private set; }
+    public int politicalPointsLeft { get; private set; }
 
     public int infantry { get; private set; }
     public int archers { get; private set; }
@@ -26,19 +29,26 @@ public class Noble {
     public int gold { get; private set; }
 
     public float scoutTime = 5f;
-    public float attackTime = 5f;
+    public float attackTime = 10f;
 
     private List<Province> ownedLands = new List<Province>();
     private Dictionary<string, Province> scoutedLands = new Dictionary<string, Province>();
     private List<string> scouting = new List<string>(), attacking = new List<string>();
 
-    public Noble(NobleScript nS, Color nC, string n, int inf, int a, int k, int f, int t, int i, int g)
+    public Noble(NobleScript nS, Color nC, string n, int aP, int mP, int pP, int inf, int a, int k, int f, int t, int i, int g)
     {
         //playerControlled = pC;
         nobleScript = nS;
         nobleColor = nC;
 
         name = n;
+
+        administrativePoints = aP;
+        administrativePointsLeft = administrativePoints;
+        militaryPoints = mP;
+        militaryPointsLeft = militaryPoints;
+        politicalPoints = pP;
+        politicalPointsLeft = politicalPoints;
 
         infantry = inf;
         archers = a;
@@ -52,29 +62,61 @@ public class Noble {
         //ownedLands = new List<Province>();
         //scoutedLands = new Dictionary<string, Province>();
     }
-    public Noble(NobleScript nS, string n) : this(nS, ProvinceScript.noOwnerShieldColor, n, 4, 3, 0, 10, 10, 10, 10) { }
+    public Noble(NobleScript nS, string n) : this(nS, ProvinceScript.noOwnerShieldColor, n, 4, 4, 4, 4, 3, 0, 10, 10, 10, 10) { }
     //public Noble(string n) : this(ProvinceScript.noOwnerShieldColor, n, 4, 3, 0, 10, 10, 10, 10) { }
-    public Noble(NobleScript nS, Color nC, string n) : this(nS, nC, n, 4, 3, 0, 10, 10, 10, 10) { }
+    public Noble(NobleScript nS, Color nC, string n) : this(nS, nC, n, 4, 4, 4, 4, 3, 0, 10, 10, 10, 10) { }
     //public Noble(Color nC, string n) : this(nC, n, 4, 3, 0, 10, 10, 10, 10) { }
 
-    public IEnumerator StartScout(Province p)
+    public IEnumerator StartScout(Province p, int aP, int mP, int pP)
     {
-        if (scouting.IndexOf(p.provinceName) < 0)
+        int adminPointsUsed = aP, militaryPointsUsed = mP, politicalPointsUsed = pP;
+        if (adminPointsUsed > administrativePointsLeft) adminPointsUsed = administrativePointsLeft;
+        else if (adminPointsUsed < 0) adminPointsUsed = 0;
+        if (militaryPointsUsed > militaryPointsLeft) militaryPointsUsed = militaryPointsLeft;
+        else if (militaryPointsUsed < 0) militaryPointsUsed = 0;
+        if (politicalPointsUsed > politicalPointsLeft) politicalPointsUsed = politicalPointsLeft;
+        else if (politicalPointsUsed < 0) politicalPointsUsed = 0;
+
+        if (scouting.IndexOf(p.provinceName) < 0 && politicalPointsUsed >= 1)
         {
+            administrativePointsLeft -= adminPointsUsed;
+            militaryPointsLeft -= militaryPointsUsed;
+            politicalPointsLeft -= politicalPointsUsed;
+
             scouting.Add(p.provinceName);
-            yield return new WaitForSeconds(scoutTime);
+            yield return new WaitForSeconds(scoutTime / (adminPointsUsed + militaryPointsUsed + politicalPointsUsed));
             ScoutLand(p);
             scouting.Remove(p.provinceName);
+
+            administrativePointsLeft += adminPointsUsed;
+            militaryPointsLeft += militaryPointsUsed;
+            politicalPointsLeft += politicalPointsUsed;
         }
     }
-    public IEnumerator StartAttack(Province p)
+    public IEnumerator StartAttack(Province p, int aP, int mP, int pP)
     {
-        if (attacking.IndexOf(p.provinceName) < 0)
+        int adminPointsUsed = aP, militaryPointsUsed = mP, politicalPointsUsed = pP;
+        if (adminPointsUsed > administrativePointsLeft) adminPointsUsed = administrativePointsLeft;
+        else if (adminPointsUsed < 0) adminPointsUsed = 0;
+        if (militaryPointsUsed > militaryPointsLeft) militaryPointsUsed = militaryPointsLeft;
+        else if (militaryPointsUsed < 0) militaryPointsUsed = 0;
+        if (politicalPointsUsed > politicalPointsLeft) politicalPointsUsed = politicalPointsLeft;
+        else if (politicalPointsUsed < 0) politicalPointsUsed = 0;
+
+        if (attacking.IndexOf(p.provinceName) < 0 && militaryPointsUsed >= 2)
         {
+            administrativePointsLeft -= adminPointsUsed;
+            militaryPointsLeft -= militaryPointsUsed;
+            politicalPointsLeft -= politicalPointsUsed;
+
             attacking.Add(p.provinceName);
-            yield return new WaitForSeconds(attackTime);
+            yield return new WaitForSeconds(attackTime / (adminPointsUsed + militaryPointsUsed + politicalPointsUsed));
             ClaimLand(p);
             attacking.Remove(p.provinceName);
+
+            administrativePointsLeft += adminPointsUsed;
+            militaryPointsLeft += militaryPointsUsed;
+            politicalPointsLeft += politicalPointsUsed;
         }
     }
     public void ClaimLand(Province p)
@@ -102,6 +144,7 @@ public class Noble {
     {
         if(scoutedLands.ContainsKey(p.provinceName)) scoutedLands.Remove(p.provinceName);
     }
+    public delegate void ProvinceAction(Province p);
 
     public Dictionary<string, Province> GetKnownLands()
     {
